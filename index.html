@@ -1,0 +1,142 @@
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 10% 20%;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        p,
+        ul {
+            line-height: 1.5;
+            /* font-size: 1.25rem; */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>CS 184 Final Report: It's Corona Time</h1>
+    <h2>Abstract</h2>
+    <p>Our project is called “It’s Corona Time.” It’s a VR game that you can play on your phone without a headset or VR
+        platform. In this game, you are a human floating in the sky, as if you’re on your way to heaven. With the
+        directional light above, behind you looks like hell. You’re in the middle, and Coronavirus heads towards you.
+        It’s your job to shoot down the enemies. The special bullet you have has the ability to instantly kill a virus
+        and even possibly bounce to another based on your angle of attack. Keep fighting the randomly spawned viruses
+        that spawn faster and faster!
+    </p>
+    <h2>Technical Approach</h2>
+    <h3>Summary of Technical Approach (and Problems Encountered)</h3>
+    <p>We faced a lot of problems in our project. The first was not really knowing how to use Unity and Maya. In Unity,
+        we had to look up a lot of video tutorials about basic functionality. The video we started out with was this. It
+        was really similar to what we wanted, but after adding in the basic ARKit, it stopped helping.</p>
+    <p>So, the first main problem was learning what a screen was as well as how to create objects. Instead of starting
+        at Unity, we knew we wanted to create our own models. So, we went to Maya. Maya itself is another beast.</p>
+    <p>We watched most of the videos in the Maya 101 playlist on the official Maya Learning Channel on Youtube. We
+        learned how to navigate around the 3D space and what important windows like the outliner, channel box, and
+        attribute editor were.</p>
+    <p>In Maya, we first got to create basic cylinders. That wasn’t bad. However, when we tried to make it smaller, it
+        was hard. Constantly putting multiple smaller cylinders to represent the sides getting smaller was a bad idea
+        (the needle getting sharper). So, we looked up something and we got the result “extrude.” This thing saved our
+        lives.</p>
+    <p>Extrude was weird because it wouldn’t look like anything would happen in the beginning, but it actually creates
+        another set of vertices/faces from the face that we extruded. If we had a plan, we can extrude another exact
+        plane and then extend that upward to make a square into a cube. With this, we were able to take the top of a
+        cylinder and extend it outwards, then make the radius smaller. This was a way to sharpen a cylinder closer to a
+        cone or to make thicker areas of the syringe.</p>
+    <p>We also had some smoothing problems. Although the models looked smoothed in Maya, when we imported to Unity, the
+        models looked rougher. We found out that Unity does not support Maya’s smooth preview mode (when you press “3”
+        in Maya and it looks smoother), so we had to do an actual geometry smoothing in Maya.</p>
+    <p>After getting the model, we imported it to Unity. Transfering the models from Maya to Unity was a big hassle.
+        First, we discovered that textures don’t transfer over, so we had to figure out how to attack texture in Unity.
+        Also, we discovered that Unity does not have any UV unwrapping features, so we had to make multiple trips back
+        to Maya to set the UV maps of several models.</p>
+    <p>In Unity, a big problem was dealing with scripts. We knew nothing about C Sharp, and that led to figuring out
+        how Unity also did its script., The first script we created was the script from the starting video for AR. To
+        fix that, we added a white plan so that anywhere you looked became white. This became VR because we don’t need
+        the surrounding image. Instead, we use it to adjust where you are looking. In that script, we used the ARKit
+        given and shot a ray. Whatever the ray hit would be stored in a variable called RaycastHit. In this variable, we
+        were given the gameObject we hit, which gives us the tag(“Player”,”virus”,”syringe”), coordinates, and the
+        normal of that surface.</p>
+    <p>However, we found out we don’t want to send out a syringe only when we tap on a virus. Instead of only shooting
+        something when we tap on a virus, we want to shoot whenever the player taps somewhere on the screen. So, instead
+        of using RaycastHit, we simply just shoot out the syringe and deal with the collision effects later.</p>
+    <p>This leads us to the next script, which is the syringe behaviour. The first thing we needed to do was be able to
+        notice where we hit and add a force or move it in a certain direction. However, it seemed to us that we needed
+        some physics, so we included a RigidBody. With that, we were able to add forces to the RigidBody and change the
+        direction of the syringe. Here, we found the reflective ray because anytime we enter a collision, we are able to
+        obtain the collision point as well as the collision normal at the surface we hit. We used the equation R = L -
+        2dot(N,L)N with a normalized N.</p>
+    <p>We realized we never spawned the bullet yet. This took us a long time because we didn’t know what a prefab was.
+        Simply creating an object and then adding it onto the object to shoot doesn’t work. We had to put it into a
+        prefab and then add the prefab into the object to shoot. So, when we shoot, we grab the “forward” direction of
+        where we are looking based on the original ray from the ARKit. With this, we know the direction to shoot the
+        object and we simply added an arbitrary amount of force, about 20 units. Again, because we added different
+        aspects to our in game object, we never updated our Prefab. So when we tried to spawn a bullet, it didn’t have
+        the new effects, such as bouncing or different speeds.</p>
+    <p>There is also a script to make the human body follow the camera. This is tricky because the human body needs to
+        follow the camera’s position. However, it only needs to follow the camera’s rotation about the vertical axis so
+        that when you look down you can see the body. To implement this, a script constantly updates the body as
+        follows: 1) move the body so that it was the same distance as it was from the camera in the previous frame. 2)
+        get the point direction of the camera and project this vector onto a plane parallel to the ground. Point the
+        body this way.</p>
+    <p>Lastly, we needed to make sure the virus spawned and slowly moved towards the player. In order to make the virus
+        spawn randomly near the player, we wrote a script that generates a random location for where we wanted the virus
+        to spawn and instantiates a new virus at that specific location. At first, we weren’t really sure how to
+        instantiate a new virus, but after a couple Google searches we found out that there was a built-in function
+        `Instantiate()` that creates new GameObjects (i.e. our viruses). In order to make the virus move towards the
+        player over time, we wrote a script that calculates the distance between the virus and the player every frame,
+        and if the distance was ever over a certain limit, the function would move the virus at a certain speed closer
+        towards the player.</p>
+    <p>To make the game more appealing, we also changed the background to not white. To do this, we added a sphere and
+        put the players and the viruses inside. However, whenever we added a texture or image on top of it, it would
+        only show outside the sphere, the inside was an empty grey color. So, we looked into what we should do, and we
+        figured out that the color is because of the surface normals. If we inverted it, then we would be able to see
+        the image from the inside! It worked!</p>
+    <p>Unity does not support monocular mobile VR by default. The closest thing it has is Google Daydream and
+        Cardboard, which splits the phone screen in half (binocular VR). This is useless if you don’t have the proper
+        headwear. To implement monocular VR, we used Unity’s ARKit and ARCore features. This is the main tutorial we
+        used: <a
+            href="https://www.youtube.com/watch?v=Ml2UakwRxjk&t=712s">https://www.youtube.com/watch?v=Ml2UakwRxjk&t=712s</a>.
+        AR games are always monocular. To create monocular
+        mobile VR, we told Unity to run and build itself like an AR game. However, for all the pixels displaying real
+        world imagery, replace those pixels with a texture image of a sunset.</p>
+    <h3>Lessons Learned</h3>
+    <p>Teamwork is important. We ran into some git push and pull issues early on. We learned to communicate who is
+        working on what at all times and not do overlapping work.</p>
+    <h2>Results</h2>
+    <p><a href="https://youtu.be/i8RXpE8esM0">Link to project video.</a></p>
+    <h2>References</h2>
+    <ul>
+        <li><a href="https://youtu.be/Ml2UakwRxjk">Getting Started with ARFoundation in Unity (ARKit, ARCore)</a></li>
+        <li><a href="https://www.youtube.com/playlist?list=PLD8E5717592CF5C26">Maya 101</a></li>
+    </ul>
+    <h2>Contributions From Each Team Member</h2>
+    <h3>Brian</h3>
+    <ul>
+        <li>ARKit and ARCore to VR</li>
+        <li>3D models of virus, human body</li>
+        <li>Texturing of virus, human body model</li>
+        <li>Scripts: move viruses closer to player, detect if player taps on virus, human body follows camera</li>
+    </ul>
+    <h3>Christine</h3>
+    <ul>
+        <li>Scripts: spawning viruses at random location in the scene</li>
+        <li>Helped adding background to the scene</li>
+        <li>Helped with initial, checkpoint, and final write-ups</li>
+    </ul>
+    <h3>Evan</h3>
+    <ul>
+        <li>Scripts: added to the spawning viruses script to make it spawn more after a while, spawn a syringe when
+            tap and have it go in a direction with speed, collision detection and behaviour of the syringes,
+            bouncing in a reflective direction</li>
+        <li>3D model of the syringe and crosshair</li>
+    </ul>
+</body>
+
+</html>
